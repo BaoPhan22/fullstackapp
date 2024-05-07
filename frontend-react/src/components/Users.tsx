@@ -1,13 +1,43 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AxiosError } from "axios";
 import { CanceledError } from "../services/api-client";
 import UserService, { User, initUser } from "../services/user-service";
+import {
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Button,
+  useDisclosure,
+  FormControl,
+  FormLabel,
+  Input,
+  Table,
+  Thead,
+  Tbody,
+  Tfoot,
+  Flex,
+  Tr,
+  Th,
+  Td,
+  TableCaption,
+  TableContainer,
+  Container,
+  Spinner,
+} from "@chakra-ui/react";
 
 function Users() {
   const [users, setUsers] = useState<User[]>([]);
   const [errors, setErrors] = useState("");
   const [isLoading, setLoading] = useState(false);
   const [user, setUser] = useState<User>(initUser);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const initialRef = React.useRef(null);
+  const finalRef = React.useRef(null);
+
   useEffect(() => {
     console.log(user);
   }, [user]);
@@ -36,9 +66,11 @@ function Users() {
       setUsers(originialUsers);
     });
   }
+
   function handleFormSubmit() {
     user.id == 0 ? addUser() : updateUser();
   }
+
   function updateUser() {
     const originialUsers = [...users];
     const updatedUser = { ...user };
@@ -53,6 +85,7 @@ function Users() {
         closeUserModal();
       });
   }
+
   function addUser() {
     const originialUsers = [...users];
     const newUser = { ...user };
@@ -69,6 +102,7 @@ function Users() {
         closeUserModal();
       });
   }
+
   function resetUserModalInput() {
     setUser(initUser);
   }
@@ -77,149 +111,126 @@ function Users() {
     const editingUser = { ...user };
     setUser(editingUser);
   }
-  function closeUserModal() {}
+
+  function closeUserModal() {
+    onClose();
+  }
+
   return (
     <>
-      <div className="container">
+      <Container maxW="4xl" mt={5}>
         {errors && <p>{errors}</p>}
         {isLoading ? (
-          <div className="spinner-border"></div>
+          <Spinner />
         ) : (
           <>
-            <button
-              className="btn btn-primary my-3"
-              data-bs-toggle="modal"
-              data-bs-target="#userModal"
-              onClick={resetUserModalInput}
+            <Button
+              onClick={() => {
+                onOpen();
+                resetUserModalInput();
+              }}
             >
-              Add
-            </button>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Address</th>
-                  <th>Phone</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.name}</td>
-                    <td>{user.address}</td>
-                    <td>{user.phone}</td>
-                    <td>
-                      <div className="d-flex gap-2">
-                        <button
-                          className="btn-outline-secondary btn"
-                          data-bs-toggle="modal"
-                          data-bs-target="#userModal"
-                          onClick={() => editUser(user)}
-                        >
-                          Update
-                        </button>
-                        <button
-                          className="btn-outline-danger btn"
-                          onClick={() => deleteUser(user)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              Add User
+            </Button>
+            <TableContainer>
+              <Table variant="simple">
+                <TableCaption>List Users</TableCaption>
+                <Thead>
+                  <Tr>
+                    <Th>Name</Th>
+                    <Th>Address</Th>
+                    <Th>Phone</Th>
+                    <Th>Action</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {users.map((user) => (
+                    <Tr key={user.id}>
+                      <Td>{user.name}</Td>
+                      <Td>{user.address}</Td>
+                      <Td>{user.phone}</Td>
+                      <Td>
+                        <Flex gap="2">
+                          <Button
+                            onClick={() => {
+                              onOpen();
+                              editUser(user);
+                            }}
+                          >
+                            Update
+                          </Button>
+                          <Button onClick={() => deleteUser(user)}>
+                            Delete
+                          </Button>
+                        </Flex>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+                <Tfoot>
+                  <Tr>
+                    <Th>Name</Th>
+                    <Th>Address</Th>
+                    <Th>Phone</Th>
+                    <Th>Action</Th>
+                  </Tr>
+                </Tfoot>
+              </Table>
+            </TableContainer>
           </>
         )}
-      </div>
+      </Container>
       {/* Modal */}
-      <div
-        className="modal fade"
-        id="userModal"
-        aria-labelledby="userModalLabel"
-        aria-hidden="true"
+      <Modal
+        initialFocusRef={initialRef}
+        finalFocusRef={finalRef}
+        isOpen={isOpen}
+        onClose={onClose}
       >
-        <div className="modal-dialog">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title" id="userModalLabel">
-                {user.id == 0
-                  ? "Add User"
-                  : `Update User ${user.name}#${user.id}`}
-              </h5>
-              <button
-                type="button"
-                className="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"
-              ></button>
-            </div>
-            <div className="modal-body">
-              <form>
-                <input type="hidden" name="id" id="id" value={user.id} />
-                <div className="mb-3">
-                  <label htmlFor="name" className="form-label">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="name"
-                    value={user.name}
-                    onChange={(e) => setUser({ ...user, name: e.target.value })}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="phone" className="form-label">
-                    Phone
-                  </label>
-                  <input
-                    type="text"
-                    onChange={(e) =>
-                      setUser({ ...user, phone: e.target.value })
-                    }
-                    className="form-control"
-                    id="phone"
-                    value={user.phone}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label htmlFor="address" className="form-label">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    onChange={(e) =>
-                      setUser({ ...user, address: e.target.value })
-                    }
-                    className="form-control"
-                    id="address"
-                    value={user.address}
-                  />
-                </div>
-              </form>
-            </div>
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                Close
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleFormSubmit}
-              >
-                Save changes
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            {user.id == 0 ? "Add User" : `Update User #${user.id}`}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <FormControl>
+              <FormLabel>Name</FormLabel>
+              <Input
+                ref={initialRef}
+                placeholder="Name"
+                value={user.name}
+                onChange={(e) => setUser({ ...user, name: e.target.value })}
+              />
+            </FormControl>
+            <FormControl mt={3}>
+              <FormLabel>Phone</FormLabel>
+              <Input
+                placeholder="Phone"
+                value={user.phone}
+                onChange={(e) => setUser({ ...user, phone: e.target.value })}
+              />
+            </FormControl>
+            <FormControl mt={3}>
+              <FormLabel>Address</FormLabel>
+              <Input
+                placeholder="Address"
+                value={user.address}
+                onChange={(e) => setUser({ ...user, address: e.target.value })}
+              />
+            </FormControl>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="blue" onClick={handleFormSubmit}>
+              Save
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       {/* Modal */}
     </>
   );
