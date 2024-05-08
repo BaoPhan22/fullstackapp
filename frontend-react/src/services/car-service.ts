@@ -5,6 +5,7 @@ export interface Car {
   name: string;
   color?: string;
   year?: string;
+  user_name?: string;
   user_id?: number;
 }
 export const initCar = {

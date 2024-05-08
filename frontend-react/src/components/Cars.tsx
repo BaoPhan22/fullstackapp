@@ -27,9 +27,12 @@ import {
   TableContainer,
   Container,
   Spinner,
+  Select,
 } from "@chakra-ui/react";
+import userService, { User } from "../services/user-service";
 
 function Cars() {
+  const [users, setUsers] = useState<User[]>([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [errors, setErrors] = useState("");
   const [isLoading, setLoading] = useState(false);
@@ -37,16 +40,30 @@ function Cars() {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const initialRef = React.useRef(null);
   const finalRef = React.useRef(null);
-
+  // useEffect(() => {
+  //   console.log(car);
+  // }, [car]);
   useEffect(() => {
-    console.log(car);
-  }, [car]);
+    setLoading(true);
+    const { request, cancel } = userService.getAll<User>();
+    request
+      .then((res) => {
+        setUsers(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err instanceof CanceledError) return;
+        setErrors((err as AxiosError).message);
+      });
+    return () => cancel();
+  }, []);
 
   useEffect(() => {
     setLoading(true);
     const { request, cancel } = CarService.getAll<Car>();
     request
       .then((res) => {
+        console.log(res.data);
         setCars(res.data);
         setLoading(false);
       })
@@ -58,12 +75,12 @@ function Cars() {
   }, []);
 
   function deleteCar(car: Car) {
-    const originialUsers = [...cars];
+    const originialCars = [...cars];
     setCars(cars.filter((u) => u.id !== car.id));
 
     CarService.delete(car.id).catch((err) => {
       setErrors(err.message);
-      setCars(originialUsers);
+      setCars(originialCars);
     });
   }
 
@@ -72,47 +89,48 @@ function Cars() {
   }
 
   function updateCar() {
-    const originialUsers = [...cars];
-    const updatedUser = { ...car };
-    setCars(cars.map((u) => (u.id === car.id ? updatedUser : u)));
-    CarService.update(updatedUser)
+    const originialCars = [...cars];
+    const updatedCar = { ...car };
+    console.log(updatedCar);
+    setCars(cars.map((u) => (u.id === car.id ? updatedCar : u)));
+    CarService.update(updatedCar)
       .catch((err) => {
         setErrors(err.message);
-        setCars(originialUsers);
+        setCars(originialCars);
       })
       .finally(() => {
-        resetUserModalInput();
-        closeUserModal();
+        resetCarModalInput();
+        closeCarModal();
       });
   }
 
   function addCar() {
-    const originialUsers = [...cars];
-    const newUser = { ...car };
-    setCars([newUser, ...cars]);
+    const originialCars = [...cars];
+    const newCar = { ...car };
+    setCars([newCar, ...cars]);
 
-    CarService.add(newUser)
+    CarService.add(newCar)
       .then((res) => setCars([res.data, ...cars]))
       .catch((err) => {
         setErrors(err.message);
-        setCars(originialUsers);
+        setCars(originialCars);
       })
       .finally(() => {
-        resetUserModalInput();
-        closeUserModal();
+        resetCarModalInput();
+        closeCarModal();
       });
   }
 
-  function resetUserModalInput() {
+  function resetCarModalInput() {
     setCar(initCar);
   }
 
-  function editUser(car: Car) {
+  function editCar(car: Car) {
     const editingCar = { ...car };
     setCar(editingCar);
   }
 
-  function closeUserModal() {
+  function closeCarModal() {
     onClose();
   }
 
@@ -127,7 +145,7 @@ function Cars() {
             <Button
               onClick={() => {
                 onOpen();
-                resetUserModalInput();
+                resetCarModalInput();
               }}
             >
               Add Car
@@ -138,8 +156,9 @@ function Cars() {
                 <Thead>
                   <Tr>
                     <Th>Name</Th>
-                    <Th>Address</Th>
-                    <Th>Phone</Th>
+                    <Th>Color</Th>
+                    <Th>Year</Th>
+                    <Th>User</Th>
                     <Th>Action</Th>
                   </Tr>
                 </Thead>
@@ -147,21 +166,20 @@ function Cars() {
                   {cars.map((car) => (
                     <Tr key={car.id}>
                       <Td>{car.name}</Td>
-                      <Td>{car.address}</Td>
-                      <Td>{car.phone}</Td>
+                      <Td>{car.color}</Td>
+                      <Td>{car.year}</Td>
+                      <Td>{car.user_name}</Td>
                       <Td>
                         <Flex gap="2">
                           <Button
                             onClick={() => {
                               onOpen();
-                              editUser(car);
+                              editCar(car);
                             }}
                           >
                             Update
                           </Button>
-                          <Button onClick={() => deleteUser(car)}>
-                            Delete
-                          </Button>
+                          <Button onClick={() => deleteCar(car)}>Delete</Button>
                         </Flex>
                       </Td>
                     </Tr>
@@ -170,8 +188,9 @@ function Cars() {
                 <Tfoot>
                   <Tr>
                     <Th>Name</Th>
-                    <Th>Address</Th>
-                    <Th>Phone</Th>
+                    <Th>Color</Th>
+                    <Th>Year</Th>
+                    <Th>User</Th>
                     <Th>Action</Th>
                   </Tr>
                 </Tfoot>
@@ -204,20 +223,47 @@ function Cars() {
               />
             </FormControl>
             <FormControl mt={3}>
-              <FormLabel>Phone</FormLabel>
+              <FormLabel>Color</FormLabel>
               <Input
-                placeholder="Phone"
-                value={car.phone}
-                onChange={(e) => setCar({ ...car, phone: e.target.value })}
+                placeholder="Color"
+                value={car.color}
+                onChange={(e) => setCar({ ...car, color: e.target.value })}
               />
             </FormControl>
             <FormControl mt={3}>
-              <FormLabel>Address</FormLabel>
+              <FormLabel>Year</FormLabel>
               <Input
-                placeholder="Address"
-                value={car.address}
-                onChange={(e) => setCar({ ...car, address: e.target.value })}
+                placeholder="Year"
+                value={car.year}
+                onChange={(e) => setCar({ ...car, year: e.target.value })}
               />
+            </FormControl>
+            <FormControl mt={3}>
+              <FormLabel>User</FormLabel>
+              {/* <Input
+                placeholder="User"
+                value={car.user_id}
+                onChange={(e) => setCar({ ...car, user_id: e.target.value })}
+              /> */}
+              <Select
+                mt={3}
+                placeholder="Select User"
+                onChange={(e) =>
+                  setCar({
+                    ...car,
+                    user_id: parseInt(e.target.value),
+                    user_name:
+                      e.target.options[e.target.selectedIndex].innerText,
+                  })
+                }
+                value={car.user_id}
+              >
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </Select>
             </FormControl>
           </ModalBody>
 

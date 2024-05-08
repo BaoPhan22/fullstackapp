@@ -13,11 +13,12 @@ class Car extends Model
     protected $fillable = [
         'name',
         'color',
-        'year'
+        'year',
+        'user_id',
     ];
 
     public function person(): BelongsTo
     {
-        return $this->belongsTo(Person::class);
+        return $this->belongsTo(Person::class, 'user_id', 'id');
     }
 }
