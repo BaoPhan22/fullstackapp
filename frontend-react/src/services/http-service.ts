@@ -11,6 +11,12 @@ class HttpService {
     this.endpoint = endpoint;
   }
 
+  private createHeaders() {
+    return localStorage.getItem("access_token")
+      ? { Authorization: `Bearer ${localStorage.getItem("access_token")}` }
+      : undefined;
+  }
+
   getAll<T>() {
     const controller = new AbortController();
     const request = apiClient.get<T[]>(this.endpoint, {
@@ -20,15 +26,19 @@ class HttpService {
     return { request, cancel: () => controller.abort() };
   }
   delete(id: number) {
-    return apiClient.delete(this.endpoint + "/" + id);
+    const headers = this.createHeaders();
+    return apiClient.delete(this.endpoint + "/" + id, { headers });
   }
   update<T extends Entity>(entity: T) {
-    return apiClient.put(this.endpoint + "/" + entity.id, entity);
+    const headers = this.createHeaders();
+    return apiClient.put(this.endpoint + "/" + entity.id, entity, { headers });
   }
   add<T>(entity: T) {
-    return apiClient.post(this.endpoint, entity);
+    const headers = this.createHeaders();
+    return apiClient.post(this.endpoint, entity, { headers });
   }
 }
 
-const create = (endpoint: string) => new HttpService(endpoint);
+const create = (endpoint: string) =>
+  new HttpService(endpoint);
 export default create;

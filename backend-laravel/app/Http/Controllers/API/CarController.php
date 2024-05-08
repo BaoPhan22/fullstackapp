@@ -8,6 +8,10 @@ use App\Models\Car;
 
 class CarController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['get', 'getById']]);
+    }
     public function get()
     {
         try {

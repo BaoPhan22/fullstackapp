@@ -25,7 +25,20 @@ Route::prefix('v1/persons')->group(function () {
     Route::put('/{id}', [PersonController::class, 'update']);
 });
 
-Route::prefix('v1/cars')->group(function () {
+// Route::prefix('v1/cars')->group([
+//     'middleware' => 'api',
+// ], function () {
+//     Route::get('/', [CarController::class, 'get']);
+//     Route::post('/', [CarController::class, 'create']);
+//     Route::delete('/{id}', [CarController::class, 'delete']);
+//     Route::get('/{id}', [CarController::class, 'getById']);
+//     Route::put('/{id}', [CarController::class, 'update']);
+// });
+
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'v1/cars'
+], function ($router) {
     Route::get('/', [CarController::class, 'get']);
     Route::post('/', [CarController::class, 'create']);
     Route::delete('/{id}', [CarController::class, 'delete']);

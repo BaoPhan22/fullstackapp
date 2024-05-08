@@ -57,7 +57,7 @@ function Cars() {
       });
     return () => cancel();
   }, []);
-
+  
   useEffect(() => {
     setLoading(true);
     const { request, cancel } = CarService.getAll<Car>();
@@ -78,10 +78,12 @@ function Cars() {
     const originialCars = [...cars];
     setCars(cars.filter((u) => u.id !== car.id));
 
-    CarService.delete(car.id).catch((err) => {
-      setErrors(err.message);
-      setCars(originialCars);
-    });
+    CarService
+      .delete(car.id)
+      .catch((err) => {
+        setErrors(err.message);
+        setCars(originialCars);
+      });
   }
 
   function handleFormSubmit() {
@@ -93,7 +95,8 @@ function Cars() {
     const updatedCar = { ...car };
     console.log(updatedCar);
     setCars(cars.map((u) => (u.id === car.id ? updatedCar : u)));
-    CarService.update(updatedCar)
+    CarService
+      .update(updatedCar)
       .catch((err) => {
         setErrors(err.message);
         setCars(originialCars);
@@ -109,7 +112,8 @@ function Cars() {
     const newCar = { ...car };
     setCars([newCar, ...cars]);
 
-    CarService.add(newCar)
+    CarService
+      .add(newCar)
       .then((res) => setCars([res.data, ...cars]))
       .catch((err) => {
         setErrors(err.message);
